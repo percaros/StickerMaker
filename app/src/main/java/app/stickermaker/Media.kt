@@ -41,13 +41,13 @@ object Media {
     fun saveStatic(c: Context, src: File, quality: Int?): Int {
         val raw = BitmapFactory.decodeFile(src.path) ?: error("No se pudo leer la imagen")
         val bmp = Bitmap.createScaledBitmap(raw, 512, 512, true)
-        var data: ByteArray? = null
-        if (quality == null && Build.VERSION.SDK_INT >= 30) data = encode(bmp, true, 100)
         var q = quality ?: 95
-        while (data == null || data.size > STATIC_MAX) {
-            data = encode(bmp, false, q)
-            if (data.size <= STATIC_MAX || q <= 5) break
+        var data: ByteArray =
+            if (quality == null && Build.VERSION.SDK_INT >= 30) encode(bmp, true, 100)
+            else encode(bmp, false, q)
+        while (data.size > STATIC_MAX && q > 5) {
             q -= 5
+            data = encode(bmp, false, q)
         }
         if (data.size > STATIC_MAX) error("No se logró bajar de 100 KB")
         File(packDir(c, false), "s${System.currentTimeMillis()}.webp").writeBytes(data)
